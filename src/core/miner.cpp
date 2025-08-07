@@ -33,6 +33,9 @@
 
 #include <random>
 
+// DERO-only optimization: Add necessary type definitions
+using uint256_t = boost::multiprecision::uint256_t;
+
 #include <hex.h>
 #include "algos.h"
 #include <thread>

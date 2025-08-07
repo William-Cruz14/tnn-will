@@ -13,16 +13,11 @@ extern bool rx_hugePages;
 
 inline Num ConvertDifficultyToBig(Num d, int algo)
 {
-  switch(algo) {
-    case ALGO_ASTROBWTV3:
-      return oneLsh256 / d;
-    case ALGO_XELISV2:
-      return maxU256 / d;
-    case ALGO_SPECTRE_X:
-      return oneLsh256 / (d+1);
-    default:
-      return 0;
+  // DERO-only optimized version - only support AstroBWT v3
+  if (algo == ALGO_ASTROBWTV3) {
+    return oneLsh256 / d;
   }
+  return 0; // Unsupported algorithm
 }
 
 inline bool CheckHash(unsigned char *hash, int64_t diff, int algo)
@@ -55,91 +50,22 @@ static inline void unsupportedGpu(int tid) {
   printf("This coin is not supported on GPUs\n");
 }
 
+// DERO-only optimized mining function
 void mineDero(int tid);
-
-void mineXelis(int tid);
-
-void mineSpectre(int tid);
-
-uint32_t rx_targetToDifficulty(const char* target);
-void randomx_init_extern();
-void randomx_init_intern(int threads);
-void randomx_set_flags(bool autoFlags);
-int rxRPCTest();
-void mineRx0(int tid);
-
-void mineVerus(int tid);
-
-void mineAstrix(int tid);
-
-void mineNexellia(int tid);
-
-void mineHoosat(int tid);
-
-void mineWaglayla(int tid);
-
-void mineShai(int tid);
-
-void mineYespower(int tid);
-
-void mineAstrix_hip(int tid);
-void mineNexellia_hip(int tid);
-void mineWaglayla_hip(int tid);
 
 typedef void (*mineFunc)(int);
 inline mineFunc getMiningFunc(int algoNum, bool gpu) {
+  // DERO-only optimized version - GPU mining not supported for AstroBWT
   if(gpu) {
-    switch(algoNum) {
-      case ALGO_ASTRIX_HASH:
-        return mineAstrix_hip;
-        break;
-      case ALGO_NXL_HASH:
-        return mineNexellia_hip;
-        break;
-      case ALGO_WALA_HASH:
-        return mineWaglayla_hip;
-        break;
-      default:
-        return unsupportedGpu;
-        break;
-    }
+    printf("GPU mining not supported for DERO AstroBWT v3\n");
+    return unsupportedGpu;
   }
-  switch(algoNum) {
-    case ALGO_ASTROBWTV3:
-      return mineDero;
-      break;
-    case ALGO_XELISV2:
-      return mineXelis;
-      break;
-    case ALGO_SPECTRE_X:
-      return mineSpectre;
-      break;
-    case ALGO_RX0:
-      return mineRx0;
-      break;
-    case ALGO_VERUS:
-      return mineVerus;
-      break;
-    case ALGO_ASTRIX_HASH:
-      return mineAstrix;
-      break;
-    case ALGO_NXL_HASH:
-      return mineNexellia;
-      break;
-    case ALGO_HOOHASH:
-      return mineHoosat;
-      break;
-    case ALGO_WALA_HASH:
-      return mineWaglayla;
-      break;
-    case ALGO_SHAI_HIVE:
-      return mineShai;
-      break;
-    case ALGO_YESPOWER:
-      return mineYespower;
-      break;
-    default:
-      return unsupportedCPU;
-      break;
+  
+  // Only support DERO AstroBWT v3 algorithm
+  if (algoNum == ALGO_ASTROBWTV3) {
+    return mineDero;
   }
+  
+  printf("Only DERO AstroBWT v3 algorithm is supported in this optimized build\n");
+  return unsupportedCPU;
 }
