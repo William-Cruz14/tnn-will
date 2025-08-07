@@ -529,30 +529,21 @@ file(GLOB_RECURSE SOURCES_CORE
 file(GLOB SOURCES_NET
   "${PROJECT_SOURCE_DIR}/src/net/*.cpp"
   "${PROJECT_SOURCE_DIR}/src/net/*.c"
-  "${PROJECT_SOURCE_DIR}/src/net/kas/*.cpp"
+  "${PROJECT_SOURCE_DIR}/src/net/dero/*.cpp"
 )
 
 include(cmake/spsa.cmake)
 
 if (NOT WITH_HIP)
+  # DERO-only optimized build - only include AstroBWT v3
   include(cmake/astrobwtv3.cmake)
-  include(cmake/xelis-hash.cmake)
-  include(cmake/randomx.cmake)
-  include(cmake/verus-hash.cmake)
-  include(cmake/astrix-hash.cmake)
-  include(cmake/nxl-hash.cmake)
-  include(cmake/hoohash.cmake)
-  include(cmake/wala-hash.cmake)
-  include(cmake/shai-hive.cmake)
-  include(cmake/yespower.cmake)
-
+  
+  # Keep necessary crypto primitives for AstroBWT
   include(cmake/blake2.cmake)
   include(cmake/chacha20.cmake)
 else()
-  include(cmake/astrix-hash.cmake)
-  include(cmake/nxl-hash.cmake)
-  include(cmake/wala-hash.cmake)
-  include(cmake/hip-crypto/hip-crypto.cmake)
+  # GPU support not available for DERO AstroBWT v3
+  message(FATAL_ERROR "GPU mining not supported for DERO AstroBWT v3 in this optimized build")
 endif()
 
 # enable_language(HIP)
