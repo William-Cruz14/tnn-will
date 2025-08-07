@@ -4,6 +4,6 @@
 #include <astrobwtv3/astrobwtv3.h>
 #include <astrobwtv3/astrotest.hpp>
 
-// Only include the DERO-specific error message
-const char* unsupported_astro = "This Binary was compiled without AstroBWTv3 support... \n"
-            "Please source a TNN Miner binary with AstroBWTv3 support";
+// Generic unsupported algorithm message for DERO-only build
+const char* unsupported_algorithm = "This DERO-optimized build only supports AstroBWT v3 algorithm.\n"
+            "All other algorithms have been removed for optimal performance.";
