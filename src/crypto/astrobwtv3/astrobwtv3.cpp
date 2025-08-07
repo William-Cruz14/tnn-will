@@ -19,11 +19,23 @@
 #include "astrobwtv3.h"
 #include "tnn-hugepages.h"
 #include "astrotest.hpp"
+#include "simd_util.hpp"  // DERO optimized SIMD utilities
 // #include "branched_AVX2.h"
 
 #include <unordered_map>
 #include <array>
 #include <algorithm>
+
+// Include DERO prefetch distance definition
+#ifdef DERO_ASTROBWT_OPTIMIZE
+#if defined(__INTEL_COMPILER) || (defined(__GNUC__) && defined(__x86_64__))
+  #define DERO_PREFETCH_DISTANCE 512
+#else
+  #define DERO_PREFETCH_DISTANCE 256
+#endif
+#else
+#define DERO_PREFETCH_DISTANCE 128
+#endif
 
 #if defined(__x86_64__)
   #include <xmmintrin.h>
@@ -8380,7 +8392,12 @@ void wolfCompute(workerData &worker, bool isTest, int wIndex)
   worker.tries[wIndex] = 0;
   for (int it = 0; it < 278; ++it)
   {
-      // TODO prefetch next chunk into L2
+      // DERO optimization: Prefetch next iteration data for better cache performance
+      if (it < 277) {  // Don't prefetch beyond array bounds
+        const byte* next_chunk = &worker.sData[wIndex * ASTRO_SCRATCH_SIZE + it * 256];
+        dero_prefetch_data(next_chunk, DERO_PREFETCH_DISTANCE);
+      }
+      
       worker.tries[wIndex]++;
       worker.random_switcher = worker.prev_lhash ^ worker.lhash ^ worker.tries[wIndex];
 
@@ -8417,7 +8434,8 @@ void wolfCompute(workerData &worker, bool isTest, int wIndex)
       } else {
         worker.prev_chunk = &worker.sData[wIndex * ASTRO_SCRATCH_SIZE + (worker.tries[wIndex] - 2) * 256];
   
-        memcpy(worker.chunk, worker.prev_chunk, 256);
+        // DERO optimization: Use optimized SIMD memcpy for 256-byte chunks
+        dero_memcpy_256_optimized(worker.chunk, worker.prev_chunk);
       }
     // }
 

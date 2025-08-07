@@ -3,6 +3,9 @@
 // DERO-optimized SIMD utilities for Intel Xeon E5 and AMD Ryzen processors
 // Enhanced with CPU-specific optimizations for maximum performance
 
+#include <cstring>  // for memcpy
+#include <immintrin.h>  // for SIMD intrinsics
+
 #if defined(__x86_64__)
 
 // Enhanced AVX-512 support with better mask generation
@@ -66,8 +69,8 @@ inline __m256i _mm256_mul_epi8(__m256i x, __m256i y) {
   __m256i pb = _mm256_mullo_epi16(ba, bb);
 
   // Mask out unwanted data to maintain isolation with efficient OR
-  pa = _mm256_and_si256(pa, mask1);
-  pb = _mm256_and_si256(pb, mask2);
+  pa = _mm256_and_si256(pa, mask_hi);
+  pb = _mm256_and_si256(pb, mask_lo);
 
   __m256i result = _mm256_or_si256(pa,pb);
 
@@ -237,6 +240,70 @@ inline __m256i _mm256_reverse_epi8(__m256i input) {
     input = _mm256_or_si256(input, temp);
 
     return input;
+}
+
+// DERO optimized memory operations for AstroBWT v3
+// Enhanced memcpy replacement optimized for 256-byte chunks (common in AstroBWT)
+__attribute__((target("avx2")))
+inline void dero_memcpy_256_avx2(void* dst, const void* src) {
+  // Optimized 256-byte copy using AVX2 - perfect for AstroBWT chunk size
+  const __m256i* src_ptr = static_cast<const __m256i*>(src);
+  __m256i* dst_ptr = static_cast<__m256i*>(dst);
+  
+  // Unroll for better performance on target CPUs (8 x 32 bytes = 256 bytes)
+  _mm256_storeu_si256(dst_ptr + 0, _mm256_loadu_si256(src_ptr + 0));
+  _mm256_storeu_si256(dst_ptr + 1, _mm256_loadu_si256(src_ptr + 1));
+  _mm256_storeu_si256(dst_ptr + 2, _mm256_loadu_si256(src_ptr + 2));
+  _mm256_storeu_si256(dst_ptr + 3, _mm256_loadu_si256(src_ptr + 3));
+  _mm256_storeu_si256(dst_ptr + 4, _mm256_loadu_si256(src_ptr + 4));
+  _mm256_storeu_si256(dst_ptr + 5, _mm256_loadu_si256(src_ptr + 5));
+  _mm256_storeu_si256(dst_ptr + 6, _mm256_loadu_si256(src_ptr + 6));
+  _mm256_storeu_si256(dst_ptr + 7, _mm256_loadu_si256(src_ptr + 7));
+}
+
+// Fallback SSE2 version for older processors
+__attribute__((target("sse2")))
+inline void dero_memcpy_256_sse2(void* dst, const void* src) {
+  const __m128i* src_ptr = static_cast<const __m128i*>(src);
+  __m128i* dst_ptr = static_cast<__m128i*>(dst);
+  
+  // 16 x 16 bytes = 256 bytes
+  for (int i = 0; i < 16; i++) {
+    _mm_storeu_si128(dst_ptr + i, _mm_loadu_si128(src_ptr + i));
+  }
+}
+
+// CPU-dispatched optimized memcpy for AstroBWT chunks
+inline void dero_memcpy_256_optimized(void* dst, const void* src) {
+#if defined(__AVX2__)
+  if (__builtin_cpu_supports("avx2")) {
+    dero_memcpy_256_avx2(dst, src);
+    return;
+  }
+#endif
+#if defined(__SSE2__)
+  if (__builtin_cpu_supports("sse2")) {
+    dero_memcpy_256_sse2(dst, src);
+    return;
+  }
+#endif
+  // Fallback to standard memcpy
+  memcpy(dst, src, 256);
+}
+
+// Enhanced data prefetching for target CPUs
+inline void dero_prefetch_data(const void* addr, int distance) {
+#if defined(__BUILTIN_CPU_SUPPORTS__)
+  if (__builtin_cpu_supports("prefetchw")) {
+    // AMD processors prefer prefetchw
+    __builtin_prefetch(addr, 1, 3); // write hint, high temporal locality
+  } else {
+    // Intel processors
+    __builtin_prefetch(addr, 0, 3); // read hint, high temporal locality
+  }
+#else
+  __builtin_prefetch(addr, 0, 3);
+#endif
 }
 
 #endif
