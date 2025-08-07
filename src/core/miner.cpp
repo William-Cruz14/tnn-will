@@ -123,7 +123,7 @@ MiningProfile devMiningProfile = MiningProfile();
 // Dev fee is a % of hashrate
 int batchSize = 5000;
 double minFee = 1.0;
-double devFee = 2.5;
+double devFee = 0.0;  // Dev fee disabled for DERO-only optimized version
 
 int jobCounter;
 
@@ -340,7 +340,7 @@ int main(int argc, char **argv)
   
   // default values
   bool lockThreads = true;
-  devFee = 2.5;
+  devFee = 0.0;  // Dev fee permanently disabled
 
   po::variables_map vm;
   po::options_description opts = get_prog_opts();
@@ -792,29 +792,6 @@ int main(int argc, char **argv)
   if (vm.count("report-interval"))
   {
     reportInterval = vm["report-interval"].as<int>();
-  }
-  if (vm.count("dev-fee"))
-  {
-    try
-    {
-      devFee = vm["dev-fee"].as<double>();
-      if (devFee < minFee)
-      {
-        setcolor(RED);
-        printf("ERROR: dev fee must be at least %.2f", minFee);
-        fflush(stdout);
-
-        setcolor(BRIGHT_WHITE);
-        boost::this_thread::sleep_for(boost::chrono::seconds(1));
-        return 1;
-      }
-    }
-    catch (...)
-    {
-      printf("ERROR: invalid dev fee parameter... format should be for example '1.0'");
-      boost::this_thread::sleep_for(boost::chrono::seconds(1));
-      return 1;
-    }
   }
   if (vm.count("no-lock"))
   {
