@@ -2,10 +2,18 @@
 #include <inttypes.h>
 #include <stdio.h>
 
-// The base for the following code was contributed by @Wolf9466 on Discord
+// DERO-optimized version: The base for the following code was contributed by @Wolf9466 on Discord
+// Additional optimizations for Intel Xeon E5 2680 v4, AMD Ryzen 5 5600, AMD Ryzen 7 5700U
+
+#ifdef DERO_ASTROBWT_OPTIMIZE
+// Optimize for target processors with better cache alignment
+#define DERO_CACHE_ALIGN 64
+#else
+#define DERO_CACHE_ALIGN 32
+#endif
 
 // Last instruction is a special case, and duplicated.
-alignas(32) uint32_t CodeLUT[257] =
+alignas(DERO_CACHE_ALIGN) uint32_t CodeLUT[257] =
 {
 	0x090F020A, 0x060B0500, 0x09080609, 0x0A0D030B, 0x04070A01, 0x09030607, 0x060D0401, 0x000A0904,
 	0x040F0F06, 0x030E070C, 0x04020D02, 0x0B0F050A, 0x0C020C04, 0x0B03070F, 0x07060206, 0x0C060501,

@@ -74,21 +74,18 @@ endif()
 
 string(REGEX REPLACE "^[a-zA-Z]" ""  INTERNAL_TNN_VERSION ${INTERNAL_TNN_VERSION})
 
-# TNN Options
-# option(WITH_CN_LITE         "Enable CryptoNight-Lite algorithms family" ON)
-# option(WITH_CN_HEAVY        "Enable CryptoNight-Heavy algorithms family" ON)
-# option(WITH_CN_PICO         "Enable CryptoNight-Pico algorithm" ON)
-# option(WITH_CN_FEMTO        "Enable CryptoNight-UPX2 algorithm" ON)
+# TNN Options - DERO-only optimized version
 option(WITH_ASTROBWTV3      "Enable AstroBWTv3 algorithms family" ON)
-option(WITH_XELISHASH       "Enable XelisHash algorithms family" ON)
-option(WITH_RANDOMX         "Enable RandomX algorithms family" ON)
+# All other algorithms disabled for DERO-only version
+option(WITH_XELISHASH       "Enable XelisHash algorithms family" OFF)
+option(WITH_RANDOMX         "Enable RandomX algorithms family" OFF)
 option(WITH_VERUSHASH        "Enable VerusHash algorithms family" OFF)
-option(WITH_ASTRIXHASH        "Enable AstrixHash algorithms family" ON)
-option(WITH_NXLHASH        "Enable NxlHash algorithms family" ON)
-option(WITH_HOOHASH        "Enable Hoohash algorithms family" ON)
-option(WITH_WALAHASH        "Enable Walahash algorithms family" ON)
-option(WITH_SHAIHIVE        "Enable ShaiHive algorithms family" ON)
-option(WITH_YESPOWER        "Enable YesPower algorithms family" ON)
+option(WITH_ASTRIXHASH        "Enable AstrixHash algorithms family" OFF)
+option(WITH_NXLHASH        "Enable NxlHash algorithms family" OFF)
+option(WITH_HOOHASH        "Enable Hoohash algorithms family" OFF)
+option(WITH_WALAHASH        "Enable Walahash algorithms family" OFF)
+option(WITH_SHAIHIVE        "Enable ShaiHive algorithms family" OFF)
+option(WITH_YESPOWER        "Enable YesPower algorithms family" OFF)
 # option(WITH_ARGON2          "Enable Argon2 algorithms family" ON)
 # option(WITH_KAWPOW          "Enable KawPow algorithms family" ON)
 # option(WITH_GHOSTRIDER      "Enable GhostRider algorithm" ON)
@@ -194,6 +191,9 @@ endif()
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
+# Include DERO-specific optimizations
+include(cmake/dero_optimizations.cmake)
+
 include (CheckIncludeFile)
 include (cmake/cpu.cmake)
 include (cmake/os.cmake)
@@ -231,10 +231,20 @@ else()
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -mtune=generic")
   endif()
   if (NOT CPU_ARCHTARGET)
+    # Optimized for target processors: Intel Xeon E5 2680 v4 (Broadwell), AMD Ryzen 5 5600 (Zen 3), AMD Ryzen 7 5700U (Zen 2)
     set(CPU_ARCHTARGET "x86-64-v3")
   endif()
-  set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=${CPU_ARCHTARGET} -m64")
-  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=${CPU_ARCHTARGET} -m64")
+  # Add performance optimizations for DERO mining
+  set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=${CPU_ARCHTARGET} -mtune=native -m64")
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=${CPU_ARCHTARGET} -mtune=native -m64")
+  
+  # Additional DERO AstroBWT optimization flags
+  set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -mavx2 -maes -mpclmul -msha")
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -mavx2 -maes -mpclmul -msha")
+  
+  # Performance optimizations
+  set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -ffast-math -funroll-loops -finline-functions")
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -ffast-math -funroll-loops -finline-functions")
 endif()
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -D\"CPU_ARCHTARGET=${CPU_ARCHTARGET}\"")
 #if(WIN_CROSS)

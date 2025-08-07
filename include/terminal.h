@@ -139,7 +139,6 @@ inline po::options_description get_prog_opts()
     ("port", po::value<int>(), "The port used to connect to the node")
     ("wallet", po::value<std::string>(), "Wallet address for receiving mining rewards")
     ("threads", po::value<int>(), "The amount of mining threads to create, default is 1")
-    ("dev-fee", po::value<double>(), "Your desired dev fee percentage, default is 2.5, minimum is 1")
     ("report-interval", po::value<int>(), "Your desired status update interval in seconds")
     ("no-lock", "Disables CPU affinity / CPU core binding")
     ("ignore-wallet", "Disables wallet validation, for specific uses with pool mining")
@@ -148,19 +147,9 @@ inline po::options_description get_prog_opts()
     // ("batch-size", po::value<int>(), "(GPU Setting) Sets batch size used for GPU mining")
   ;
 
-  po::options_description coins("Coin Selection", col_width);
+  po::options_description coins("DERO Mining", col_width);
   coins.add_options()
-    ("dero", "Will mine Dero")
-    ("xelis", "Will mine Xelis")
-    ("spectre", "Will mine Spectre")
-    ("randomx", "For mining RandomX coins")
-    ("astrix", "Will mine Astrix")
-    ("nexellia", "Will mine Nexellia")
-    ("hoosat", "Will mine Hoosat")
-    ("waglayla", "Will mine Waglayla")
-    ("shai", "Will mine Shai")
-    ("advc", "Will mine AdventureCoin (ADVC)")
-    ("yespower", po::value<std::string>(), "Mine with custom yespower parameters (format: N=2048,R=32,pers=string)")
+    ("dero", "Mine DERO cryptocurrency (only supported coin in this optimized version)")
   ;
 
   po::options_description dero("Dero", col_width);
@@ -231,12 +220,6 @@ inline po::options_description get_prog_opts()
 
   general.add(coins);
   general.add(dero);
-  general.add(spectre);
-  general.add(xelis);
-  general.add(randomX);
-  general.add(astrix);
-  general.add(nexellia);
-  general.add(waglayla);
   general.add(advanced);
   general.add(debug);
   return general;
