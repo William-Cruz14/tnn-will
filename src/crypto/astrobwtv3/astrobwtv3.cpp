@@ -19,11 +19,23 @@
 #include "astrobwtv3.h"
 #include "tnn-hugepages.h"
 #include "astrotest.hpp"
+#include "simd_util.hpp"  // DERO optimized SIMD utilities
 // #include "branched_AVX2.h"
 
 #include <unordered_map>
 #include <array>
 #include <algorithm>
+
+// Include DERO prefetch distance definition
+#ifdef DERO_ASTROBWT_OPTIMIZE
+#if defined(__INTEL_COMPILER) || (defined(__GNUC__) && defined(__x86_64__))
+  #define DERO_PREFETCH_DISTANCE 512
+#else
+  #define DERO_PREFETCH_DISTANCE 256
+#endif
+#else
+#define DERO_PREFETCH_DISTANCE 128
+#endif
 
 #if defined(__x86_64__)
   #include <xmmintrin.h>
@@ -8331,28 +8343,47 @@ void branchComputeCPU_avx2_zOptimized(workerData &worker, bool isTest, int wInde
     // }
 
 __attribute__ ((target("avx512f")))
-// // Copy prev_chunk between start -> end to chunk (inclusive)
+// Enhanced DERO-optimized copy with bounds checking
 inline void copyChunkData(workerData &worker, uint8_t start, uint8_t end) {
-  for (int i = start; i + 63 < end; i += 64) {
+  int i = start;
+  // Process 64-byte chunks with AVX-512
+  for (; i + 63 < end; i += 64) {
     __m512i prev_data = _mm512_loadu_si512((__m512i*)&worker.prev_chunk[i]);
     _mm512_storeu_si512((__m512i*)&worker.chunk[i], prev_data);
+  }
+  // Handle remaining bytes with smaller operations
+  for (; i < end; i++) {
+    worker.chunk[i] = worker.prev_chunk[i];
   }
 }
 
 __attribute__ ((target("avx2")))
-// Copy prev_chunk between start -> end to chunk (inclusive)
+// Enhanced DERO-optimized copy with bounds checking
 void copyChunkData(workerData &worker, int start, int end) {
-  for (int i = start; i < end; i += 32) {
+  int i = start;
+  // Process 32-byte chunks with AVX2
+  for (; i + 31 < end; i += 32) {
     __m256i prev_data = _mm256_loadu_si256((__m256i*)&worker.prev_chunk[i]);
     _mm256_storeu_si256((__m256i*)&worker.chunk[i], prev_data);
   }
+  // Handle remaining bytes
+  for (; i < end; i++) {
+    worker.chunk[i] = worker.prev_chunk[i];
+  }
 }
+
 __attribute__ ((target("sse2")))
-// Copy prev_chunk between start -> end to chunk (inclusive)
+// Enhanced DERO-optimized copy with bounds checking
 void copyChunkData(workerData &worker, int start, int end) {
-  for (int i = start; i < end; i += 16) {
+  int i = start;
+  // Process 16-byte chunks with SSE2
+  for (; i + 15 < end; i += 16) {
     __m128i prev_data = _mm_loadu_si128((__m128i*)&worker.prev_chunk[i]);
     _mm_storeu_si128((__m128i*)&worker.chunk[i], prev_data);
+  }
+  // Handle remaining bytes
+  for (; i < end; i++) {
+    worker.chunk[i] = worker.prev_chunk[i];
   }
 }
 __attribute__ ((target("default")))
@@ -8380,7 +8411,12 @@ void wolfCompute(workerData &worker, bool isTest, int wIndex)
   worker.tries[wIndex] = 0;
   for (int it = 0; it < 278; ++it)
   {
-      // TODO prefetch next chunk into L2
+      // DERO optimization: Prefetch next iteration data for better cache performance
+      if (it < 277) {  // Don't prefetch beyond array bounds
+        const byte* next_chunk = &worker.sData[wIndex * ASTRO_SCRATCH_SIZE + it * 256];
+        dero_prefetch_data(next_chunk, DERO_PREFETCH_DISTANCE);
+      }
+      
       worker.tries[wIndex]++;
       worker.random_switcher = worker.prev_lhash ^ worker.lhash ^ worker.tries[wIndex];
 
@@ -8412,12 +8448,13 @@ void wolfCompute(workerData &worker, bool isTest, int wIndex)
 
       worker.chunk = &worker.sData[wIndex * ASTRO_SCRATCH_SIZE + (worker.tries[wIndex] - 1) * 256];
 
-      if (worker.tries[wIndex] == 1) {
+      if (__builtin_expect(worker.tries[wIndex] == 1, 0)) {
         worker.prev_chunk = worker.chunk;
       } else {
         worker.prev_chunk = &worker.sData[wIndex * ASTRO_SCRATCH_SIZE + (worker.tries[wIndex] - 2) * 256];
   
-        memcpy(worker.chunk, worker.prev_chunk, 256);
+        // DERO optimization: Use optimized SIMD memcpy for 256-byte chunks
+        dero_memcpy_256_optimized(worker.chunk, worker.prev_chunk);
       }
     // }
 
@@ -8427,7 +8464,8 @@ void wolfCompute(workerData &worker, bool isTest, int wIndex)
     __m256i data = _mm256_loadu_si256((__m256i*)&worker.prev_chunk[worker.pos1]);
     #endif
 
-    if (worker.op == 253)
+    // DERO optimization: Branch prediction hints for most common operations
+    if (__builtin_expect(worker.op == 253, 0))
     {
       copyChunkData(worker, worker.pos1, worker.pos2);
       for (int i = worker.pos1; i < worker.pos2; i++)

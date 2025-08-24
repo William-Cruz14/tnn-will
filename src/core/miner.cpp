@@ -33,6 +33,9 @@
 
 #include <random>
 
+// DERO-only optimization: Add necessary type definitions
+using uint256_t = boost::multiprecision::uint256_t;
+
 #include <hex.h>
 #include "algos.h"
 #include <thread>
@@ -123,7 +126,7 @@ MiningProfile devMiningProfile = MiningProfile();
 // Dev fee is a % of hashrate
 int batchSize = 5000;
 double minFee = 1.0;
-double devFee = 2.5;
+double devFee = 0.0;  // Dev fee disabled for DERO-only optimized version
 
 int jobCounter;
 
@@ -340,7 +343,7 @@ int main(int argc, char **argv)
   
   // default values
   bool lockThreads = true;
-  devFee = 2.5;
+  devFee = 0.0;  // Dev fee permanently disabled
 
   po::variables_map vm;
   po::options_description opts = get_prog_opts();
@@ -412,7 +415,7 @@ int main(int argc, char **argv)
     miningProfile.coin = coins[COIN_DERO];
     #else
     setcolor(RED);
-    printf("%s", unsupported_astro);
+    printf("%s", unsupported_algorithm);
     fflush(stdout);
     setcolor(BRIGHT_WHITE);
     return 1;
@@ -425,7 +428,7 @@ int main(int argc, char **argv)
     miningProfile.coin = coins[COIN_XELIS];
     #else
     setcolor(RED);
-    printf("%s", unsupported_xelishash);
+    printf("%s", unsupported_algorithm);
     fflush(stdout);
     setcolor(BRIGHT_WHITE);
     return 1;
@@ -439,7 +442,7 @@ int main(int argc, char **argv)
     miningProfile.protocol = PROTO_SPECTRE_STRATUM;
     #else
     setcolor(RED);
-    printf("%s", unsupported_astro);
+    printf("%s", unsupported_algorithm);
     fflush(stdout);
     setcolor(BRIGHT_WHITE);
     return 1;
@@ -453,7 +456,7 @@ int main(int argc, char **argv)
     miningProfile.protocol = PROTO_KAS_STRATUM;
     #else
     setcolor(RED);
-    printf("%s", unsupported_astrix);
+    printf("%s", unsupported_algorithm);
     fflush(stdout);
     setcolor(BRIGHT_WHITE);
     return 1;
@@ -467,7 +470,7 @@ int main(int argc, char **argv)
     miningProfile.protocol = PROTO_KAS_STRATUM;
     #else
     setcolor(RED);
-    printf("%s", unsupported_astrix);
+    printf("%s", unsupported_algorithm);
     fflush(stdout);
     setcolor(BRIGHT_WHITE);
     return 1;
@@ -481,7 +484,7 @@ int main(int argc, char **argv)
     miningProfile.protocol = PROTO_KAS_STRATUM;
     #else
     setcolor(RED);
-    printf("%s", unsupported_hoohash);
+    printf("%s", unsupported_algorithm);
     fflush(stdout);
     setcolor(BRIGHT_WHITE);
     return 1;
@@ -495,7 +498,7 @@ int main(int argc, char **argv)
     miningProfile.protocol = PROTO_KAS_STRATUM;
     #else
     setcolor(RED);
-    printf("%s", unsupported_waglayla);
+    printf("%s", unsupported_algorithm);
     fflush(stdout);
     setcolor(BRIGHT_WHITE);
     return 1;
@@ -510,7 +513,7 @@ int main(int argc, char **argv)
     miningProfile.protocol = PROTO_RX0_SOLO; // Solo minin unsupported for now, so default to stratum instead
     #else
     setcolor(RED);
-    printf("%s", unsupported_randomx);
+    printf("%s", unsupported_algorithm);
     fflush(stdout);
     setcolor(BRIGHT_WHITE);
     return 1;
@@ -528,7 +531,7 @@ int main(int argc, char **argv)
     initADVCParams(&devYespowerParams);
     #else
     setcolor(RED);
-    printf("%s", unsupported_yespower);
+    printf("%s", unsupported_algorithm);
     fflush(stdout);
     setcolor(BRIGHT_WHITE);
     return 1;
@@ -564,7 +567,7 @@ int main(int argc, char **argv)
     initADVCParams(&devYespowerParams);
     #else
     setcolor(RED);
-    printf("%s", unsupported_yespower);
+    printf("%s", unsupported_algorithm);
     fflush(stdout);
     setcolor(BRIGHT_WHITE);
     return 1;
@@ -581,10 +584,12 @@ int main(int argc, char **argv)
     #if defined(USE_ASTRO_SPSA)
       initSPSA();
     #endif
-    return SpectreX::test();
+    // DERO-only build: Spectre test not supported
+    printf("%s\n", unsupported_algorithm);
+    return 1;
     #else
     setcolor(RED);
-    printf("%s", unsupported_astro);
+    printf("%s", unsupported_algorithm);
     fflush(stdout);
     setcolor(BRIGHT_WHITE);
     return 1;
@@ -598,7 +603,7 @@ int main(int argc, char **argv)
     return rc;
     #else
     setcolor(RED);
-    printf("%s", unsupported_xelishash);
+    printf("%s", unsupported_algorithm);
     fflush(stdout);
     setcolor(BRIGHT_WHITE);
     return 1;
@@ -613,7 +618,7 @@ int main(int argc, char **argv)
     return rc;
     #else
     setcolor(RED);
-    printf("%s", unsupported_randomx);
+    printf("%s", unsupported_algorithm);
     fflush(stdout);
     setcolor(BRIGHT_WHITE);
     return 1;
@@ -626,7 +631,7 @@ int main(int argc, char **argv)
     return AstrixHash::test();
     #else
     setcolor(RED);
-    printf("%s", unsupported_astrix);
+    printf("%s", unsupported_algorithm);
     fflush(stdout);
     setcolor(BRIGHT_WHITE);
     return 1;
@@ -639,7 +644,7 @@ int main(int argc, char **argv)
     return NxlHash::test();
     #else
     setcolor(RED);
-    printf("%s", unsupported_nexellia);
+    printf("%s", unsupported_algorithm);
     fflush(stdout);
     setcolor(BRIGHT_WHITE);
     return 1;
@@ -652,7 +657,7 @@ int main(int argc, char **argv)
     return HooHash::test();
     #else
     setcolor(RED);
-    printf("%s", unsupported_hoohash);
+    printf("%s", unsupported_algorithm);
     fflush(stdout);
     setcolor(BRIGHT_WHITE);
     return 1;
@@ -665,7 +670,7 @@ int main(int argc, char **argv)
     return WalaHash::test();
     #else
     setcolor(RED);
-    printf("%s", unsupported_waglayla);
+    printf("%s", unsupported_algorithm);
     fflush(stdout);
     setcolor(BRIGHT_WHITE);
     return 1;
@@ -678,7 +683,7 @@ int main(int argc, char **argv)
     return ShaiHive::test();
     #else
     setcolor(RED);
-    printf("%s", unsupported_shai);
+    printf("%s", unsupported_algorithm);
     fflush(stdout);
     setcolor(BRIGHT_WHITE);
     return 1;
@@ -694,7 +699,7 @@ int main(int argc, char **argv)
     return 0;
     #else
     setcolor(RED);
-    printf("%s", unsupported_xelishash);
+    printf("%s", unsupported_algorithm);
     fflush(stdout);
     setcolor(BRIGHT_WHITE);
     return 1;
@@ -708,7 +713,7 @@ int main(int argc, char **argv)
     return 0;
     #else
     setcolor(RED);
-    printf("%s", unsupported_astro);
+    printf("%s", unsupported_algorithm);
     fflush(stdout);
     setcolor(BRIGHT_WHITE);
     #endif
@@ -793,29 +798,6 @@ int main(int argc, char **argv)
   {
     reportInterval = vm["report-interval"].as<int>();
   }
-  if (vm.count("dev-fee"))
-  {
-    try
-    {
-      devFee = vm["dev-fee"].as<double>();
-      if (devFee < minFee)
-      {
-        setcolor(RED);
-        printf("ERROR: dev fee must be at least %.2f", minFee);
-        fflush(stdout);
-
-        setcolor(BRIGHT_WHITE);
-        boost::this_thread::sleep_for(boost::chrono::seconds(1));
-        return 1;
-      }
-    }
-    catch (...)
-    {
-      printf("ERROR: invalid dev fee parameter... format should be for example '1.0'");
-      boost::this_thread::sleep_for(boost::chrono::seconds(1));
-      return 1;
-    }
-  }
   if (vm.count("no-lock"))
   {
     setcolor(CYAN);
@@ -878,7 +860,7 @@ int main(int argc, char **argv)
     return rc;
     #else 
     setcolor(RED);
-    printf("%s", unsupported_astro);
+    printf("%s", unsupported_algorithm);
     fflush(stdout);
     setcolor(BRIGHT_WHITE);
     return 1;

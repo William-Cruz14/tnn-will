@@ -2,10 +2,28 @@
 #include <inttypes.h>
 #include <stdio.h>
 
-// The base for the following code was contributed by @Wolf9466 on Discord
+// DERO-optimized version: The base for the following code was contributed by @Wolf9466 on Discord
+// Enhanced optimizations for Intel Xeon E5 2680 v4, AMD Ryzen 5 5600, AMD Ryzen 7 5700U
 
+#ifdef DERO_ASTROBWT_OPTIMIZE
+// CPU-specific cache optimizations for target processors
+#if defined(__INTEL_COMPILER) || (defined(__GNUC__) && defined(__x86_64__))
+  // Intel Xeon E5 v4 (Broadwell) has 64-byte cache lines
+  #define DERO_CACHE_ALIGN 64
+  #define DERO_PREFETCH_DISTANCE 512
+#else
+  // AMD Ryzen (Zen 2/3) also uses 64-byte cache lines but different prefetch characteristics
+  #define DERO_CACHE_ALIGN 64
+  #define DERO_PREFETCH_DISTANCE 256
+#endif
+#else
+#define DERO_CACHE_ALIGN 32
+#define DERO_PREFETCH_DISTANCE 128
+#endif
+
+// Enhanced cache-aligned lookup table with prefetch hints
 // Last instruction is a special case, and duplicated.
-alignas(32) uint32_t CodeLUT[257] =
+alignas(DERO_CACHE_ALIGN) uint32_t CodeLUT[257] =
 {
 	0x090F020A, 0x060B0500, 0x09080609, 0x0A0D030B, 0x04070A01, 0x09030607, 0x060D0401, 0x000A0904,
 	0x040F0F06, 0x030E070C, 0x04020D02, 0x0B0F050A, 0x0C020C04, 0x0B03070F, 0x07060206, 0x0C060501,

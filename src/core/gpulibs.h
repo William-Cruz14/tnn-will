@@ -1,25 +1,9 @@
 #pragma once
 
-#include <tnn_hip/hello.hpp>
-
-#include <tnn_hip/crypto/astrix-hash/test_hip_astrix.h>
-#include <tnn_hip/crypto/nxl-hash/test_hip_nxl.h>
-#include <tnn_hip/crypto/wala-hash/test_hip_wala.h>
-
-#include <crypto/astrix-hash/astrix-hash.h>
-#include <crypto/nxl-hash/nxl-hash.h>
+// DERO-only optimized build - no GPU libraries needed for AstroBWT v3
 
 inline int GPUTest() {
-  #ifdef TNN_HIP
-    // if (is_hip_supported()) {
-      // helloTest();
-      // benchAstrixHip();
-      benchWalaHip();
-      // AstrixHash::test();
-
-      // benchNxlHip();
-      // NxlHash::test();
-    // }
-  #endif
+  // GPU mining is not supported for DERO AstroBWT v3 in this optimized build
+  printf("GPU mining not supported in DERO-only optimized build\n");
   return 0;
 }

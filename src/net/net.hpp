@@ -158,6 +158,8 @@ inline void do_session_v2(
   // Is algo even the right thing to begin with?!?
   bool use_ssl = miningProf->transportLayer.find("wss", 0) != std::string::npos;
   use_ssl |= miningProf->transportLayer.find("ssl", 0) != std::string::npos;
+  
+  // DERO-only optimized build - only support AstroBWT v3
   switch (miningProf->coin.miningAlgo)
   {
   #ifdef TNN_ASTROBWTV3
@@ -165,149 +167,7 @@ inline void do_session_v2(
     dero_session(miningProf->host, miningProf->port, miningProf->wallet, miningProf->workerName, ioc, ctx, yield, miningProf->isDev);
     break;
   #endif
-  #ifdef TNN_XELISHASH
-  case ALGO_XELISV2:
-  {
-    switch (miningProf->protocol)
-    {
-    case PROTO_XELIS_SOLO:
-      xelis_session(miningProf->host, miningProf->port, miningProf->wallet, miningProf->workerName, ioc, yield, miningProf->isDev);
-      break;
-    case PROTO_XELIS_XATUM:
-      xatum_session(miningProf->host, miningProf->port, miningProf->wallet, miningProf->workerName, ioc, ctx, yield, miningProf->isDev);
-      break;
-    case PROTO_XELIS_STRATUM:
-    {
-      if(use_ssl) {
-        xelis_stratum_session(miningProf->host, miningProf->port, miningProf->wallet, miningProf->workerName, ioc, ctx, yield, miningProf->isDev);
-      } else {
-        xelis_stratum_session_nossl(miningProf->host, miningProf->port, miningProf->wallet, miningProf->workerName, ioc, ctx, yield, miningProf->isDev);
-      }
-      break;
-    }
-    }
-    break;
-  }
-  #endif
-  #ifdef TNN_ASTROBWTV3
-  case ALGO_SPECTRE_X:
-    switch (miningProf->protocol)
-    {
-      case PROTO_SPECTRE_SOLO:
-        break;
-      case PROTO_SPECTRE_STRATUM:
-        spectre_stratum_session(miningProf->host, miningProf->port, miningProf->wallet, miningProf->workerName, ioc, ctx, yield, miningProf->isDev);
-        break;
-    }
-    break;
-  #endif
-  #ifdef TNN_RANDOMX
-  case ALGO_RX0:
-  {
-    switch (miningProf->protocol)
-    {
-      case PROTO_RX0_SOLO:
-        rx0_session(miningProf->host, miningProf->port, miningProf->wallet, miningProf->isDev);
-        break;
-      case PROTO_RX0_STRATUM:
-      {
-        if(use_ssl) {
-          rx0_stratum_session(miningProf->host, miningProf->port, miningProf->wallet, miningProf->workerName, ioc, ctx, yield, miningProf->isDev);
-        } else {
-          rx0_stratum_session_nossl(miningProf->host, miningProf->port, miningProf->wallet, miningProf->workerName, ioc, ctx, yield, miningProf->isDev);
-        }
-        break;
-      }
-    }
-    break;
-  }
-  #endif
-  #ifdef TNN_VERUSHASH
-  case ALGO_VERUS:
-  {
-    switch (miningProf->protocol)
-    {
-      case PROTO_VERUS_SOLO:
-        break;
-      case PROTO_VERUS_STRATUM:
-      {
-        // if (use_ssl) {
-
-        // } else {
-          verus_stratum_session(miningProf->host, miningProf->port, miningProf->wallet, miningProf->workerName, ioc, ctx, yield, miningProf->isDev);
-        // }
-        break;
-      }
-    }
-    break;
-  }
-  #endif
-  #ifdef TNN_ASTRIXHASH
-  case ALGO_ASTRIX_HASH:
-    switch (miningProf->protocol)
-    {
-      case PROTO_KAS_SOLO:
-        kas_session(miningProf->host, miningProf->port, miningProf->wallet, miningProf->isDev);
-        break;
-      case PROTO_KAS_STRATUM:
-        kas_stratum_session(miningProf->host, miningProf->port, miningProf->wallet, miningProf->workerName, ioc, ctx, yield, miningProf->isDev);
-        break;
-    }
-  #endif
-  #ifdef TNN_NXLHASH
-  case ALGO_NXL_HASH:
-    switch (miningProf->protocol)
-    {
-      case PROTO_KAS_SOLO:
-        kas_session(miningProf->host, miningProf->port, miningProf->wallet, miningProf->isDev);
-        break;
-      case PROTO_KAS_STRATUM:
-        kas_stratum_session(miningProf->host, miningProf->port, miningProf->wallet, miningProf->workerName, ioc, ctx, yield, miningProf->isDev);
-        break;
-    }
-  #endif
-  #ifdef TNN_HOOHASH
-  case ALGO_HOOHASH:
-    switch (miningProf->protocol)
-    {
-      case PROTO_KAS_SOLO:
-        kas_session(miningProf->host, miningProf->port, miningProf->wallet, miningProf->isDev);
-        break;
-      case PROTO_KAS_STRATUM:
-        kas_stratum_session(miningProf->host, miningProf->port, miningProf->wallet, miningProf->workerName, ioc, ctx, yield, miningProf->isDev);
-        break;
-    }
-  #endif
-  #ifdef TNN_WALAHASH
-  case ALGO_WALA_HASH:
-    switch (miningProf->protocol)
-    {
-      case PROTO_KAS_SOLO:
-        kas_session(miningProf->host, miningProf->port, miningProf->wallet, miningProf->isDev);
-        break;
-      case PROTO_KAS_STRATUM:
-        kas_stratum_session(miningProf->host, miningProf->port, miningProf->wallet, miningProf->workerName, ioc, ctx, yield, miningProf->isDev);
-        break;
-    }
-  #endif
-  #ifdef TNN_SHAIHIVE
-  case ALGO_SHAI_HIVE:
-    shai_session(miningProf->host, miningProf->port, miningProf->wallet, miningProf->workerName, ioc, ctx, yield, miningProf->isDev);
-    break;
-  #endif
-  #ifdef TNN_YESPOWER
-  case ALGO_YESPOWER:
-    switch (miningProf->protocol)
-    {
-      case PROTO_BTC_STRATUM:
-        if(use_ssl) {
-          btc_stratum_session(miningProf->host, miningProf->port, miningProf->wallet, miningProf->workerName, ioc, ctx, yield, miningProf->isDev);
-        } else {
-          btc_stratum_session_nossl(miningProf->host, miningProf->port, miningProf->wallet, miningProf->workerName, ioc, ctx, yield, miningProf->isDev);
-        }
-        break;
-    }
-    break;
-  #endif
-  }
-}
+  default:
+    std::cout << "DERO-only optimized build: Only AstroBWT v3 algorithm is supported." << std::endl;
+    return;
+  }}
